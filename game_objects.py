@@ -28,11 +28,9 @@ class GameObject():
             self._scene.remove_from_scene(self)
             self._x -= self._velx
             self._scene.add_to_scene(self)
-
         else:
-            self._scene.remove_from_scene(self ,permanent = True)
+            self._scene.remove_from_scene(self, permanent = True)
 
-    
     def get_x(self):
         return self._x
     
@@ -68,44 +66,54 @@ class PewPew(GameObject):
             self._x += self._velx
             if not self.check_collisions():
                 self._scene.add_to_scene(self)
+        else:
+            self._scene.remove_from_scene(self ,permanent = True)
 
 
 class Player(GameObject):
-    def __init__(self, scene):
-        super().__init__(MANDO_SPRITE, scene, *PLAYER_INIT)
-        self._vely = VELY
+    def __init__(self, scene, fore = 'WHITE', back = 'BLACK'):
+        super().__init__(MANDO_SPRITE, scene, *PLAYER_INIT, fore, back)
+        self._vely = 0
+        self._velx = 0
         self._score = 0
         self._lives = LIVES
 
-    def move_right(self):
-        if  self._x + self._velx + self._width < WIDTH:
+    def move_right(self, force = ACCX):
+        if self._x + self._velx + self._width + force < WIDTH and self._x + self._velx  + force> PLAYER_INIT[0]:
             self._scene.remove_from_scene(self)
-            self._x += self._velx
+            self._velx += force
+            if self._velx > MAX_VELX:
+                self._velx = MAX_VELY
+            self._x = self._x + self._velx
+            # self._y = max(self._y + self._vely, SKY + self._height + 1) 
             self.check_collisions()
             self._scene.add_to_scene(self)
+            # self._scene.message_board(str(self._vely))
+        else:
+            self._velx = 0
         
-    def move_left(self):
-        if self._x - self._velx > PLAYER_INIT[0]:
+    def move_left(self, force = ACCX):
+        if self._x + self._velx + self._width - force < WIDTH and self._x + self._velx - force> PLAYER_INIT[0]:
             self._scene.remove_from_scene(self)
-            self._x -= self._velx
+            self._velx -= force
+            if self._velx < MIN_VELX:
+                self._velx = MIN_VELY
+            self._x = self._x + self._velx
+            # self._y = max(self._y + self._vely, SKY + self._height + 1) 
             self.check_collisions()
             self._scene.add_to_scene(self)
+        else:
+            self._velx = 0
+
     
-    def jet(self):
-        self._scene.remove_from_scene(self)
-        self._y = max(self._y + self._vely, SKY + self._height + 1) 
-        self.check_collisions()
-        self._scene.add_to_scene(self)
-
-    def gravity(self): 
-        self._scene.remove_from_scene(self)
-        self._y = min(self._y + GRAVITY, PLAYER_INIT[1])
-        self.check_collisions()
-        self._scene.add_to_scene(self)
-
-    def fire(self):
-        pew = PewPew(self._scene, self.get_x() + self.get_width(), self.get_y() - self.get_height() + 1)
-        self._scene.add_to_scene(pew, 'pewpews')
+    def move_vertically(self):
+        if self.get_y() + self._vely < HEIGHT  and self.get_y() + self._vely - self.get_height()> SKY:
+            self._scene.remove_from_scene(self)
+            self._y += self._vely
+            self.check_collisions()
+            self._scene.add_to_scene(self)
+            return True
+        return False
 
     def check_collisions(self):
         for i in self._scene.get_coins():
@@ -119,6 +127,54 @@ class Player(GameObject):
                 self._scene.remove_from_scene(i, permanent = True)
                 time.sleep(0.5)
     
+    def pull(self, x, y, force):
+        if self._x - x > 0:
+            self.move_left(force)
+        elif self._x + self._width - x < 0: 
+            self.move_right(force)
+
+        if self._y - self._height - y > 0:
+            self._vely = min(MIN_VELY, self._vely - force)
+        elif self._y - y < 0:
+            self._vely = max(MAX_VELY, self._vely + force)
+        self.move_vertically()
+    
+    def reset_velx(self):
+        self._velx = VELX
+
+    def jet(self):
+        if self.get_y() + self._vely - ACCY < HEIGHT  and self.get_y() + self._vely - ACCY - self.get_height()> SKY:
+            self._scene.remove_from_scene(self)
+            self._vely -= ACCY
+            if self._vely < -3:
+                self._vely = -3
+            self._y = self._y + self._vely
+            # self._y = max(self._y + self._vely, SKY + self._height + 1) 
+            self.check_collisions()
+            self._scene.add_to_scene(self)
+            self._scene.message_board(str(self._vely))
+        else:
+            self._vely = 0
+            
+
+    def gravity(self): 
+        if self.get_y() + self._vely + GRAVITY < HEIGHT and self.get_y() + self._vely + GRAVITY - self.get_height() > SKY:
+            self._scene.remove_from_scene(self)
+            self._vely += GRAVITY
+            self._y = self._y + self._vely
+            self.check_collisions()
+            self._scene.message_board(str(self._vely))
+            self._scene.add_to_scene(self)
+        else:
+            self._vely = 0
+
+        if self.get_y() == PLAYER_INIT[1]:
+            self._vely = 0
+
+    def fire(self):
+        pew = PewPew(self._scene, self.get_x() + self.get_width(), self.get_y() - self.get_height() + 1)
+        self._scene.add_to_scene(pew, 'pewpews')
+    
     def check_score(self):
         return self._score
     
@@ -128,13 +184,13 @@ class Player(GameObject):
 
 
 class Coin(GameObject):
-    def __init__(self, scene, x, y):
-        super().__init__(COIN, scene, x, y)
+    def __init__(self, scene, x, y, fore = 'WHITE', back = 'BLACK'):
+        super().__init__(COIN, scene, x, y, fore, back)
 
 class Beam(GameObject):
-    def __init__(self, btype, scene, x, y):
-        super().__init__(btype, scene, x, y)
+    def __init__(self, btype, scene, x, y, fore = 'WHITE', back = 'BLACK'):
+        super().__init__(btype, scene, x, y, fore, back)
 
 class Magnet(GameObject):
-    def __init__(self, scene, x, y):
-        super().__init__()
+    def __init__(self, scene, x, y, fore = 'WHITE', back = 'BLACK'):
+        super().__init__(MAGNET, scene, x, y, fore, back)

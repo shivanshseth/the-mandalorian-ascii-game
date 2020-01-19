@@ -3,7 +3,7 @@ from colorama import Fore, Back, Style, init
 from utils.display import Display
 import numpy as np
 import random
-from game_objects import Coin, Beam, PewPew
+from game_objects import Coin, Beam, PewPew, Magnet
 
 class Scene():
 
@@ -12,10 +12,11 @@ class Scene():
         self.width = LIMIT_R - LIMIT_L
         self.grid = np.full((self.height, self.width), ' ')
         self.display = Display()
+        self._player = []
         self._background = []
         self._beams = []
         self._coins = []
-        self._magnets = []
+        self._magnet = []
         self._pewpews = []
 
     def create_border(self):
@@ -40,6 +41,7 @@ class Scene():
         wd = game_obj.get_width()
         ht = game_obj.get_height()
         obj_box = game_obj.get_art_box()
+        assert y - ht > SKY and y < HEIGHT
         self.grid[y - ht : y, x: x + wd] = obj_box
 
     def remove_from_scene(self, game_obj, permanent = False):
@@ -49,8 +51,12 @@ class Scene():
                 self._background.remove(game_obj)
             if game_obj in self._coins: 
                 self._coins.remove(game_obj)
-            if game_obj in self._beams: 
+            elif game_obj in self._beams: 
                 self._beams.remove(game_obj)
+            elif game_obj in self._pewpews: 
+                self._pewpews.remove(game_obj)
+            elif game_obj in self._magnet:
+                self._magnet.remove(game_obj)  
 
         #Remove from grid
         x = game_obj.get_x()
@@ -77,6 +83,21 @@ class Scene():
             self._background.append(beam)
             self._beams.append(beam)
     
+    def gen_magnet(self):
+        if len(self._magnet) < 1:
+            y = random.randint(SKY + 2 , HEIGHT - 2)
+            magnet = Magnet(self, WIDTH - 5, y)
+            self._background.append(magnet)
+            self._magnet.append(magnet)
+    
+    def magnet_pull(self):
+        assert len(self._player) > 0
+        player = self._player[0]
+        if len(self._magnet) > 0:
+            magnet = self._magnet[0]
+            player.pull(magnet.get_x(), magnet.get_y(), MAG_FORCE)
+        else:
+            player.reset_velx()
 
     def get_pewpews(self):
         return self._pewpews
@@ -90,12 +111,16 @@ class Scene():
     def get_beams(self):
         return self._beams
 
-    def scroll(self):
+    def next_frame(self):
         for i in self._background:
             i.move_left()
-        
+
         for i in self._pewpews:
             i.move_right()
+        
+        for i in self._player:
+            i.check_collisions()
+        
     
     def score_lives(self, player):
         s = 'SCORE: ' + str(player.check_score())
