@@ -18,6 +18,10 @@ MANDO_SPRITE = ''' 0 __
 C D -
 C D  
 I I   '''
+MANDO_SHIELD = '''| 0 __|
+|C D -|
+|C D  |
+|I I  | '''
 COIN = '''$'''
 BEAM1 = '''_______'''
 BEAM2 = '''|
@@ -30,9 +34,14 @@ BEAM3 = '''\\
    \\'''
 PEW = '--'
 MAGNET = '|M|'
+SPEEDUP = '|S|'
 MAG_FORCE = 1
+MAG_RANGE_X = 40
+MAG_RANGE_Y = 30
 PEW_VEL = 3
 LIVES = 5
+TFP = 0.1
+SHIELD_TIME = 10
 # PEW_VEL = 3
 # FORE = ['BLACK', 'RED', 'GREEN', 'YELLOW', 'BLUE', 'MAGENTA', 'CYAN', 'WHITE', 'RESET']
 # BACK = ['BLACK', 'RED', 'GREEN', 'YELLOW', 'BLUE', 'MAGENTA', 'CYAN', 'WHITE', 'RESET']

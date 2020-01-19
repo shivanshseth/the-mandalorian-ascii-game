@@ -16,6 +16,7 @@ frame = 0
 sc.gen_coins()
 sc.gen_beam()
 GAME_START = time.time()
+
 while True:
     FRAME_START = time.time()
     game_over = 0
@@ -23,17 +24,24 @@ while True:
     if pl.check_lives() <= -1:
         game_over = 1
         break
+    
+    if pl.shield_active():
+        if time.time() - pl._shield_start > SHIELD_TIME:
+            pl.deactivate_shield() 
 
     frame += 1
     rd1 = random.randint(0,100)
     rd2 = random.randint(0,100)
+
     if frame % 2 == 0:
         sc.magnet_pull()
     if frame % 10 == 0:
         sc.gen_coins()
     if frame %20 == 0 :
         sc.gen_beam()
-    if frame % 100 == 0:
+    if frame %100 == 0 :
+        sc.gen_speedup()
+    if frame % 200 == 0:
         sc.gen_magnet() 
     
     sc.score_lives(pl)
@@ -42,7 +50,7 @@ while True:
     if kb.kbhit():
         c = kb.getch()
     else:
-        c = ' '
+        c = '0'
         
     if c == 'q':
         break
@@ -56,11 +64,13 @@ while True:
         pl.gravity()
     if c == 'f':
         pl.fire()
+    if c.isspace():
+        pl.activate_shield()
 
     NOW = time.time()
     diff = NOW - FRAME_START
-    if diff < 0.1:
-        time.sleep(0.1 - diff)
+    if diff < sc.get_tpf():
+        time.sleep(sc.get_tpf() - diff)
 
     sc.next_frame() 
 
