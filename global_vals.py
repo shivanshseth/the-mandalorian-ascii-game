@@ -1,5 +1,5 @@
-LIMIT_BOTTOM = 40
-LIMIT_TOP = 5
+LIMIT_BOTTOM = 43
+LIMIT_TOP = 2
 LIMIT_L =  5
 LIMIT_R = 170
 SKY = 3
@@ -8,7 +8,12 @@ WIDTH = LIMIT_R - LIMIT_L
 PLAYER_INIT = (2, HEIGHT - 1) 
 GRAVITY = 1
 VELX = 2
-VELY = -3
+MAX_VELY = 3
+MAX_VELX = 3
+MIN_VELY = -3
+MIN_VELX = -3
+ACCY = 3
+ACCX = 3
 MANDO_SPRITE = ''' 0 __
 C D -
 C D  
@@ -24,6 +29,8 @@ BEAM3 = '''\\
   \\
    \\'''
 PEW = '--'
+MAGNET = '|M|'
+MAG_FORCE = 1
 PEW_VEL = 3
 LIVES = 5
 # PEW_VEL = 3
