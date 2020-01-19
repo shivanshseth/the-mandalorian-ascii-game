@@ -3,7 +3,7 @@ from colorama import Fore, Back, Style, init
 from utils.display import Display
 import numpy as np
 import random
-from game_objects import Coin, Beam, PewPew, Magnet
+from game_objects import Coin, Beam, PewPew, Magnet, SpeedUp
 
 class Scene():
 
@@ -12,12 +12,14 @@ class Scene():
         self.width = LIMIT_R - LIMIT_L
         self.grid = np.full((self.height, self.width), ' ')
         self.display = Display()
+        self._tpf = TFP
         self._player = []
         self._background = []
         self._beams = []
         self._coins = []
         self._magnet = []
         self._pewpews = []
+        self._speedups = []
 
     def create_border(self):
         self.grid[-1, :] = ['X']*self.width
@@ -57,6 +59,8 @@ class Scene():
                 self._pewpews.remove(game_obj)
             elif game_obj in self._magnet:
                 self._magnet.remove(game_obj)  
+            elif game_obj in self._speedups:
+                self._speedups.remove(game_obj)  
 
         #Remove from grid
         x = game_obj.get_x()
@@ -90,6 +94,13 @@ class Scene():
             self._background.append(magnet)
             self._magnet.append(magnet)
     
+    def gen_speedup(self):
+        if len(self._speedups) < 1:
+            y = random.randint(SKY + 2 , HEIGHT - 2)
+            su = SpeedUp(self, WIDTH - 5, y)
+            self._background.append(su)
+            self._speedups.append(su)
+    
     def magnet_pull(self):
         assert len(self._player) > 0
         player = self._player[0]
@@ -98,6 +109,12 @@ class Scene():
             player.pull(magnet.get_x(), magnet.get_y(), MAG_FORCE)
         else:
             player.reset_velx()
+
+    def do_speedup(self, x = 1.5):
+        self._tpf /= x
+    
+    def reset_speed(self):
+        self._tpf = TFP
 
     def get_pewpews(self):
         return self._pewpews
@@ -111,17 +128,22 @@ class Scene():
     def get_beams(self):
         return self._beams
 
+    def get_speedups(self):
+        return self._speedups
+
+    def get_tpf(self):
+        return self._tpf
+
     def next_frame(self):
+        for i in self._pewpews:
+            i.move_right()
+
         for i in self._background:
             i.move_left()
 
-        for i in self._pewpews:
-            i.move_right()
-        
         for i in self._player:
             i.check_collisions()
         
-    
     def score_lives(self, player):
         s = 'SCORE: ' + str(player.check_score())
         self.grid[SKY - 1, 2: 2 + len(s)] = list(s)

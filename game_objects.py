@@ -3,6 +3,8 @@ from global_vals import *
 import time
 class GameObject():
     def __init__(self, art, scene, x, y, fore = 'WHITE', back = 'BLACK'): 
+        self._fore = fore
+        self._back = back
         self._width = 0
         self._height = 0
         self._velx = VELX
@@ -71,12 +73,14 @@ class PewPew(GameObject):
 
 
 class Player(GameObject):
-    def __init__(self, scene, fore = 'WHITE', back = 'BLACK'):
-        super().__init__(MANDO_SPRITE, scene, *PLAYER_INIT, fore, back)
+    def __init__(self, scene, art = MANDO_SPRITE, fore = 'WHITE', back = 'BLACK'):
+        super().__init__(art, scene, *PLAYER_INIT, fore, back)
         self._vely = 0
         self._velx = 0
         self._score = 0
         self._lives = LIVES
+        self._shield_active = False
+        self._shield_start = None
 
     def move_right(self, force = ACCX):
         if self._x + self._velx + self._width + force < WIDTH and self._x + self._velx  + force> PLAYER_INIT[0]:
@@ -123,24 +127,32 @@ class Player(GameObject):
 
         for i in self._scene.get_beams():
             if not (self.get_x() + self.get_width() <= i.get_x() or i.get_x() + i.get_width() <= self.get_x() or self.get_y() < i.get_y() - i.get_height() or i.get_y() < self.get_y() - self.get_height()): 
-                self._lives -= 1
                 self._scene.remove_from_scene(i, permanent = True)
-                time.sleep(0.5)
+                if not self.shield_active():
+                    self._lives -= 1
+                    time.sleep(0.5)
+
+        for i in self._scene.get_speedups():
+            if not (self.get_x() + self.get_width() <= i.get_x() or i.get_x() + i.get_width() <= self.get_x() or self.get_y() < i.get_y() - i.get_height() or i.get_y() < self.get_y() - self.get_height()): 
+                self._scene.remove_from_scene(i, permanent = True)
+                self._scene.do_speedup()
+        
     
     def pull(self, x, y, force):
-        if self._x - x > 0:
-            self.move_left(force)
-        elif self._x + self._width - x < 0: 
-            self.move_right(force)
+        if abs(self._x - x) <= MAG_RANGE_X and abs(self._y - y) <= MAG_RANGE_Y:
+            if self._x - x > 0:
+                self.move_left(force)
+            elif self._x + self._width - x < 0: 
+                self.move_right(force)
 
-        if self._y - self._height - y > 0:
-            self._vely = min(MIN_VELY, self._vely - force)
-        elif self._y - y < 0:
-            self._vely = max(MAX_VELY, self._vely + force)
-        self.move_vertically()
-    
+            if self._y - self._height - y > 0:
+                self._vely = min(MIN_VELY, self._vely - force)
+            elif self._y - y < 0:
+                self._vely = max(MAX_VELY, self._vely + force)
+            self.move_vertically()
+        
     def reset_velx(self):
-        self._velx = VELX
+        self._velx = 0
 
     def jet(self):
         if self.get_y() + self._vely - ACCY < HEIGHT  and self.get_y() + self._vely - ACCY - self.get_height()> SKY:
@@ -175,6 +187,25 @@ class Player(GameObject):
         pew = PewPew(self._scene, self.get_x() + self.get_width(), self.get_y() - self.get_height() + 1)
         self._scene.add_to_scene(pew, 'pewpews')
     
+    def activate_shield(self):
+        self._scene.remove_from_scene(self)
+        super().__init__(MANDO_SHIELD, self._scene, self.get_x(), self.get_y(), self._fore, self._back)
+        self._scene.add_to_scene(self)
+        self._velx = 0
+        self._shield_active = True
+        self._shield_start = time.time()
+    
+    def deactivate_shield(self):
+        self._scene.remove_from_scene(self)
+        super().__init__(MANDO_SPRITE, self._scene, self.get_x(), self.get_y(), self._fore, self._back)
+        self._scene.add_to_scene(self)
+        self._velx = 0
+        self._shield_active = False
+        self._shield_start = None
+    
+    def shield_active(self):
+        return self._shield_active
+
     def check_score(self):
         return self._score
     
@@ -194,3 +225,7 @@ class Beam(GameObject):
 class Magnet(GameObject):
     def __init__(self, scene, x, y, fore = 'WHITE', back = 'BLACK'):
         super().__init__(MAGNET, scene, x, y, fore, back)
+
+class SpeedUp(GameObject):
+    def __init__(self, scene, x, y, fore = 'WHITE', back = 'BLACK'):
+        super().__init__(SPEEDUP, scene, x, y, fore, back)
