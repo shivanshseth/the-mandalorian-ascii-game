@@ -1,5 +1,5 @@
 from scene import Scene
-from game_objects import GameObject, Player
+from game_objects import GameObject, Player, Viserion
 from global_vals import *
 import tty, sys, termios, time, os, colorama
 import random
@@ -10,16 +10,21 @@ os.system('clear')
 sc = Scene()
 sc.create_border()
 pl = Player(sc)
+boss = Viserion(sc)
 sc.add_to_scene(pl, 'player')
 kb = KBHit()
 frame = 0
 sc.gen_coins()
 sc.gen_beam()
 GAME_START = time.time()
-
+is_boss_frame = False
 while True:
     FRAME_START = time.time()
     game_over = 0
+    frame += 1
+    sc.score_lives()
+    sc.print_scene()
+    sc.next_frame(is_boss_frame)
 
     if pl.check_lives() <= -1:
         game_over = 1
@@ -28,24 +33,34 @@ while True:
     if pl.shield_active():
         if time.time() - pl._shield_start > SHIELD_TIME:
             pl.deactivate_shield() 
-
-    frame += 1
-    rd1 = random.randint(0,100)
-    rd2 = random.randint(0,100)
-
-    if frame % 2 == 0:
-        sc.magnet_pull()
-    if frame % 10 == 0:
-        sc.gen_coins()
-    if frame %20 == 0 :
-        sc.gen_beam()
-    if frame %100 == 0 :
-        sc.gen_speedup()
-    if frame % 200 == 0:
-        sc.gen_magnet() 
     
-    sc.score_lives(pl)
-    sc.print_scene()
+    if frame % 100 == 0:
+        sc.add_to_scene(boss, 'viserion')
+        is_boss_frame = True
+        sc.start_boss()
+    
+    if is_boss_frame and boss.check_lives() < 0:
+        # game_over = 1
+        # break
+        pass
+
+
+    if not is_boss_frame:
+        if frame % 2 == 0:
+            sc.magnet_pull()
+
+        if frame % 10 == 0:
+            sc.gen_coins()
+
+        if frame %20 == 0 :
+            sc.gen_beam()
+
+        if frame %100 == 0 :
+            sc.gen_speedup()
+
+        if frame % 200 == 0:
+            sc.gen_magnet()
+    
 
     if kb.kbhit():
         c = kb.getch()
@@ -64,6 +79,8 @@ while True:
         pl.gravity()
     if c == 'f':
         pl.fire()
+    if c == 'f':
+        sc.reset_speed()
     if c.isspace():
         pl.activate_shield()
 
@@ -71,8 +88,7 @@ while True:
     diff = NOW - FRAME_START
     if diff < sc.get_tpf():
         time.sleep(sc.get_tpf() - diff)
-
-    sc.next_frame() 
+     
 
 if game_over:
     sc.message_board('GAME OVER, press q to exit')

@@ -35,14 +35,28 @@ BEAM3 = '''\\
 PEW = '--'
 MAGNET = '|M|'
 SPEEDUP = '|S|'
+VISERION = ''' ,_.',   ,   ,;        
+ ~``J.; /}  / }        
+     %.;   ;, `.       
+     `%,; '';   ;      
+    /-'`-`,; ,;`;      
+   //"~~"\`,;          
+ ~;'  "~~"'`,;        ,
+      ( /| )~",;.,;.,;;
+     "~~`~'"'~"'~"'~"'  '''
 MAG_FORCE = 1
 MAG_RANGE_X = 40
 MAG_RANGE_Y = 30
 PEW_VEL = 3
-LIVES = 5
+PLAYER_LIVES = 5
+BOSS_LIVES = 10
 TFP = 0.1
 SHIELD_TIME = 10
-# PEW_VEL = 3
+VISERION_ACC = 2
+ICEBALL =  '''  o o  
+o o o o
+  o o   '''
+ICEBALLS_PER_ATTACK = 6  
 # FORE = ['BLACK', 'RED', 'GREEN', 'YELLOW', 'BLUE', 'MAGENTA', 'CYAN', 'WHITE', 'RESET']
 # BACK = ['BLACK', 'RED', 'GREEN', 'YELLOW', 'BLUE', 'MAGENTA', 'CYAN', 'WHITE', 'RESET']
 # STYLE =  ['DIM', 'NORMAL', 'BRIGHT', 'RESET_ALL']
